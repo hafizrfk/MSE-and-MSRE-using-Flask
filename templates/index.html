@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MSE dan PSNR</title>
+    <style>
+        /* Styling untuk body - mengatur tampilan dasar halaman */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* Membuat background gradient */
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        /* Styling untuk judul utama */
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Container utama - membungkus semua konten */
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Section untuk area upload - mengatur layout flex */
+        .upload-section {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Styling untuk box upload gambar */
+        .upload-box {
+            flex: 1;
+            border: 2px dashed #ccc;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        /* Efek hover pada box upload */
+        .upload-box:hover {
+            border-color: #277be9;
+            background-color: #f8f9fa;
+        }
+
+        /* Label untuk box upload */
+        .upload-box label {
+            display: block;
+            margin-bottom: 10px;
+            color: #93ec1f;
+            font-weight: bold;
+        }
+
+        /* Menyembunyikan input file default */
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Styling untuk tombol upload kustom */
+        .custom-file-upload {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #e9ecef;
+            color: #17a5e7;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        /* Efek hover pada tombol upload */
+        .custom-file-upload:hover {
+            background-color: #dde2e6;
+        }
+
+        /* Styling untuk preview gambar */
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            margin-top: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        /* Styling untuk tombol submit */
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: #2173ee;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        /* Efek hover pada tombol */
+        button:hover {
+            background-color: #25b6cf;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Styling untuk area hasil */
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        /* Judul area hasil */
+        .result h2 {
+            color: #31d439;
+            margin-top: 0;
+        }
+
+        /* Item hasil (MSE dan PSNR) */
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        /* Menghilangkan border pada item hasil terakhir */
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Styling untuk loading spinner */
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        /* Animasi loading spinner */
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #28a745;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        /* Keyframes untuk animasi spinner */
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Styling untuk area perbandingan gambar */
+        .comparison-result {
+            margin-top: 20px;
+        }
+
+        /* Layout untuk perbandingan gambar */
+        .image-comparison {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        /* Container untuk masing-masing gambar */
+        .compared-image {
+            flex: 1;
+            text-align: center;
+        }
+
+        /* Styling gambar hasil */
+        .compared-image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Judul gambar hasil */
+        .compared-image h3 {
+            margin: 10px 0;
+            color: #2c3e50;
+        }
+
+        /* Styling tombol kembali */
+        .back-button {
+            background-color: #6c757d;
+            margin-top: 20px;
+        }
+
+        /* Efek hover tombol kembali */
+        .back-button:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Masukkan Gambar untuk Menghitung MSE dan PSNR</h1>
+        <!-- Form upload gambar - tersembunyi setelah hasil ditampilkan -->
+        <form action="/calculate" method="post" enctype="multipart/form-data" id="uploadForm" {% if mse is defined
+            %}style="display: none;" {% endif %}>
+            <div class="upload-section">
+                <!-- Box upload untuk gambar pertama -->
+                <div class="upload-box">
+                    <label>First Image</label>
+                    <label class="custom-file-upload">
+                        <input type="file" name="image1" required onchange="previewImage(this, 'preview1')">
+                        Choose File
+                    </label>
+                    <img id="preview1" class="preview-image">
+                </div>
+                <!-- Box upload untuk gambar kedua -->
+                <div class="upload-box">
+                    <label>Second Image</label>
+                    <label class="custom-file-upload">
+                        <input type="file" name="image2" required onchange="previewImage(this, 'preview2')">
+                        Choose File
+                    </label>
+                    <img id="preview2" class="preview-image">
+                </div>
+            </div>
+            <button type="submit">Calculate MSE and PSNR</button>
+        </form>
+
+        <!-- Area hasil perhitungan dan perbandingan gambar -->
+        {% if mse is defined %}
+        <div class="comparison-result">
+            <!-- Menampilkan kedua gambar yang dibandingkan -->
+            <div class="image-comparison">
+                <div class="compared-image">
+                    <h3>Image 1</h3>
+                    <img src="{{ img1_data }}" alt="First Image">
+                </div>
+                <div class="compared-image">
+                    <h3>Image 2</h3>
+                    <img src="{{ img2_data }}" alt="Second Image">
+                </div>
+            </div>
+            <!-- Menampilkan hasil perhitungan MSE dan PSNR -->
+            <div class="result">
+                <h2>Results</h2>
+                <div class="result-item">
+                    <span>Mean Square Error (MSE):</span>
+                    <span>{{ mse }}</span>
+                </div>
+                <div class="result-item">
+                    <span>Peak Signal-to-Noise Ratio (PSNR):</span>
+                    <span>{{ psnr }}</span>
+                </div>
+            </div>
+            <!-- Tombol untuk kembali ke form upload -->
+            <button onclick="window.location.href='/'" class="back-button">Calculate New Images</button>
+        </div>
+        {% else %}
+        <!-- Tampilan awal sebelum ada hasil -->
+        <div class="result">
+            <h2>Results</h2>
+            <div class="result-item">
+                <span>Mean Square Error (MSE):</span>
+                <span>-</span>
+            </div>
+            <div class="result-item">
+                <span>Peak Signal-to-Noise Ratio (PSNR):</span>
+                <span>-</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Loading spinner -->
+        <div class="loading">
+            <div class="loading-spinner"></div>
+            <p>Processing images...</p>
+        </div>
+    </div>
+
+    <!-- JavaScript untuk preview gambar dan loading state -->
+    <script>
+        // Fungsi untuk menampilkan preview gambar yang diupload
+        function previewImage(input, previewId) {
+            const preview = document.getElementById(previewId);
+            const file = input.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Menampilkan loading spinner saat form disubmit
+        document.getElementById('uploadForm').onsubmit = function () {
+            document.querySelector('.loading').style.display = 'block';
+        }
+    </script>
+</body>
+
+</html>
